@@ -929,7 +929,7 @@ pre .javascript .function {
   }
 }
 .header {
-  background: transparent;
+  background: url("../image/avatar.gif");
 }
 .header-inner {
   margin: 0 auto;
@@ -1159,7 +1159,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #ff0;
+  background: #d7ffff;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
