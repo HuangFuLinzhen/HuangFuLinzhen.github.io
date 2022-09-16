@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="1.vector迭代器失效分析使用insert函数对vector容器进行操作时迭代器失效 因为在insert时，vector可能需要进行扩容，而扩容的本质是new一块新的空间，再将数据迁移过去。而我们知道，迭代器的本质是指针，而插入后，若vector扩容，则原有的数据被释放，指向原有数据的迭代器就成了野指针，所以迭代器失效了。 erase操作导致的迭代器失效 迭代器的几种失效的情况1.vector">
+<meta property="og:type" content="article">
+<meta property="og:title" content="多益面经整理">
+<meta property="og:url" content="http://yoursite.com/2022/09/16/%E5%A4%9A%E7%9B%8A%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/index.html">
+<meta property="og:site_name" content="千秋的个人博客">
+<meta property="og:description" content="1.vector迭代器失效分析使用insert函数对vector容器进行操作时迭代器失效 因为在insert时，vector可能需要进行扩容，而扩容的本质是new一块新的空间，再将数据迁移过去。而我们知道，迭代器的本质是指针，而插入后，若vector扩容，则原有的数据被释放，指向原有数据的迭代器就成了野指针，所以迭代器失效了。 erase操作导致的迭代器失效 迭代器的几种失效的情况1.vector">
+<meta property="article:published_time" content="2022-09-16T09:37:00.000Z">
+<meta property="article:modified_time" content="2022-09-16T09:38:18.242Z">
+<meta property="article:author" content="HuangFu.LZ.">
+<meta property="article:tag" content="面经">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2022/09/16/%E5%A4%9A%E7%9B%8A%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>多益面经整理 | 千秋的个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">千秋的个人博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/09/16/%E5%A4%9A%E7%9B%8A%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HuangFu.LZ.">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="千秋的个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          多益面经整理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-16 17:37:00 / 修改时间：17:38:18" itemprop="dateCreated datePublished" datetime="2022-09-16T17:37:00+08:00">2022-09-16</time>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="1-vector迭代器失效分析"><a href="#1-vector迭代器失效分析" class="headerlink" title="1.vector迭代器失效分析"></a>1.vector迭代器失效分析</h2><p>使用insert函数对vector容器进行操作时迭代器失效</p>
+<p>因为在insert时，vector可能需要进行扩容，而扩容的本质是new一块新的空间，再将数据迁移过去。而我们知道，<br>迭代器的本质是指针，而插入后，若vector扩容，则原有的数据被释放，指向原有数据的迭代器就成了野指针，所以迭代器失效了。</p>
+<p>erase操作导致的迭代器失效</p>
+<h4 id="迭代器的几种失效的情况"><a href="#迭代器的几种失效的情况" class="headerlink" title="迭代器的几种失效的情况"></a>迭代器的几种失效的情况</h4><p>1.vector、deque，该数据结构分配在连续的内存中，当删除一个元素后，内存中的数据会发生移动以保证数据的紧凑。<br>所以删除一个元素后，其他数据的地址发生了变化，之前获取的迭代器根据原有信息就访问不到正确的数据<br>解决方法：erase返回下一个有效迭代器的值</p>
+<p>2.map、set、multiset、map、multimap，树形数据结构。以红黑树或者平衡二叉树组织数据，虽然删除了一个元素，整棵树也会调整，以符合红黑树或者二叉树的规范，但是单个节点在内存中的地址没有变化，变化的是各节点之间的指向关系。<br>删除一个结点不会对其他结点造成影响。erase迭代器只是被删元素的迭代器失效。</p>
+<a id="more"></a>
+<p>3.list，链表型数据结构。双向链表，使用不连续分配的内存，删除运算使指向删除位置的迭代器失效，不会使其他迭代器失效。</p>
+<h4 id="vector扩容概述"><a href="#vector扩容概述" class="headerlink" title="vector扩容概述"></a>vector扩容概述</h4><p>vector 为空的时候没有预分配空间，每次添加一个元素时，会判断当前是否还有剩余可用空间，    如果没有则进行试探性扩容，并且把内存拷贝到新申请的内存空间上，并且释放原先的内存；</p>
+<h5 id="内存重新分配步骤"><a href="#内存重新分配步骤" class="headerlink" title="内存重新分配步骤"></a>内存重新分配步骤</h5><p>根据新指定的 Capacity 分配对应的内存空间；<br>将数据从旧的内存拷贝到新申请的内存；<br>析构旧内存的数据；<br>释放旧内存的空间；</p>
+<h2 id="2-函数指针和指针函数"><a href="#2-函数指针和指针函数" class="headerlink" title="2.函数指针和指针函数"></a>2.函数指针和指针函数</h2><p>指针函数本质是一个返回指针的函数<br>    int* fun(int x,int y);<br>函数指针是一个指针变量<br>    int (*fun)(int x,int y);</p>
+<h2 id="3-空指针野指针内存泄漏"><a href="#3-空指针野指针内存泄漏" class="headerlink" title="3.空指针野指针内存泄漏"></a>3.空指针野指针内存泄漏</h2><h3 id="空指针"><a href="#空指针" class="headerlink" title="空指针"></a>空指针</h3><pre><code>int* p = bullptr;</code></pre><h3 id="野指针"><a href="#野指针" class="headerlink" title="野指针"></a>野指针</h3><p>指针指向了一块随机的空间，不受程序控制。<br>    产生原因：<br>        1.指针定义时未被初始化<br>        2.指针被释放时没有置空指针指向的内存空间在用free()和delete释放后，如果程序员没有对其进行置空或者其他赋值操作的话，就会成为一个野指针。<br>        3.指针操作超越变量作用域<br>        危害：解引用一个非空的无效指针是一个未被定义的行为<br>        规避方法：<br>            1.初始化指针的时候将其置为nullptr，之后对其操作。<br>            2.释放指针的时候将其置为nullptr。</p>
+<h3 id="内存泄漏-是指在程序代码中动态申请的、堆上的内存-由于某种原因、在使用后没有被释放，进而造成内存的浪费。"><a href="#内存泄漏-是指在程序代码中动态申请的、堆上的内存-由于某种原因、在使用后没有被释放，进而造成内存的浪费。" class="headerlink" title="内存泄漏: 是指在程序代码中动态申请的、堆上的内存 由于某种原因、在使用后没有被释放，进而造成内存的浪费。"></a>内存泄漏: 是指在程序代码中动态申请的、堆上的内存 由于某种原因、在使用后没有被释放，进而造成内存的浪费。</h3><pre><code>产生原因：
+    1. malloc/new申请的内存没有主动释放
+    2. 使用free释放new申请的内存
+    3. 使用delete去删除数组
+    4. 基类的析构函数没有定义为虚函数当基类指针指向子类对象时，如果基类的析构函数不是virtual，那么子类的析构函数将不会被调用子类的资源没有正确是释放，因此造成内存泄露。例如下面代码中析构函数 ~A() 不是virtual，在调用 delete pa 的时候就不会调用子类 B 的析构函数，该对象中子类 B 中的内存无法被释放干净。</code></pre><h2 id="4-重载与覆盖的区别"><a href="#4-重载与覆盖的区别" class="headerlink" title="4.重载与覆盖的区别"></a>4.重载与覆盖的区别</h2><p>重载是通过不同的方法参数来区分的，例如不同的参数个数，不同的参数类型，不同的参数顺序。<br>派生类中覆盖的方法必须要和基类中被覆盖的方法有相同的函数名和参数。<br>覆盖是基类和派生类之间的关系，是垂直关系；而重载是在同一个类中方法之间的关系，是水平关系。</p>
+<h2 id="5-C-三大特性"><a href="#5-C-三大特性" class="headerlink" title="5.C++三大特性"></a>5.C++三大特性</h2><p>封装继承多态</p>
+<h2 id="6-类内静态函数访问"><a href="#6-类内静态函数访问" class="headerlink" title="6.类内静态函数访问"></a>6.类内静态函数访问</h2><p>静态成员函数是类中特殊的成员函数<br>静态成员函数属于整个类所有<br>可以通过类名直接访问公有静态成员函数<br>可以通过对象名访问公有静太成员函数</p>
+<h2 id="7-二级指针"><a href="#7-二级指针" class="headerlink" title="7.二级指针"></a>7.二级指针</h2><p>函数中可更改指针的值。<br>    给指针申请空间的函数<br>    链表</p>
+<h2 id="8-拷贝构造"><a href="#8-拷贝构造" class="headerlink" title="8.拷贝构造"></a>8.拷贝构造</h2><p>创建新对象      函数参数为对象时</p>
+<pre><code>Stu(Stu&amp; stu){
+    this.men ber = stu.menber;
+}</code></pre><p>编译器默认提供无参构造，默认析构，默认拷贝构造，赋值构造<br>与默认构造会产生重载关系<br>如果写了拷贝构造，没有写无参构造 ，编译器也不再提供默认构造。</p>
+<h2 id="9-深-浅拷贝"><a href="#9-深-浅拷贝" class="headerlink" title="9.深 浅拷贝"></a>9.深 浅拷贝</h2><p>浅拷贝：拷贝赋值。浅拷贝性能更高。<br>深拷贝，重新申请空间， 类中有指针的情况，避免二次释放。<br>默认拷贝构造为浅拷贝<br>浅拷贝只是另外一个对象中属性的一个副本，所以在有指针时，会出现指向同一块空间的情况，<br>在这时进行拷贝构造时应该重新申请空间，并用内存拷贝的方式赋值新对象。</p>
+<h2 id="10-产生哈希冲突解决方法"><a href="#10-产生哈希冲突解决方法" class="headerlink" title="10.产生哈希冲突解决方法"></a>10.产生哈希冲突解决方法</h2><p>1 开放地址法<br>2 链地址法<br>3 再哈希法<br>4 公共溢出区</p>
+<h2 id="11-线程的参数有哪些"><a href="#11-线程的参数有哪些" class="headerlink" title="11.线程的参数有哪些"></a>11.线程的参数有哪些</h2><p>关于参数的传递，std::thread的构造函数只会单纯的复制传入的变量，特别需要注意的是传递引用时，传入的是值的副本，也就是说子线程中的修改影响不了主线程中的值。<br>值传递:<br>    主线程中的值，被拷贝一份传到了子线程中。可以看出下面主线程和子线程参数的地址是不同的，因而子线程中值的改变不会对主线程中的值产生影响。<br>传引用:<br>    首先要说明的是，按照普通函数的做法，如果我们在函数传入参数的地方加上引用传递的符号&amp;时候，就可以实现我们的目的了，但是在多线程里面是不行的，因为线程的创建属于函数式编程，即使是用引用来接收传的值，也是会将其拷贝一份到子线程的独立内存中<br>    为了解决上面的问题，才引入了std::ref()。但是注意如果我们会在子线中改变它，此时用于接收ref()的那个参数前不能加const.<br>传指针;<br>    当指针传递的时候，主线程和子线程中的指针都是指向同一块内存。所以在这种情况下会有一个陷阱，如果使用detach()，则当主线程崩溃或者正常结束后，该块内存被回收，若此时子线程没有结束，那么子线程中指针就成了野指针，程序会出错。<br>传临时对象:<br>    用临时变量作为实参时，会更高效，由于临时变量会隐式自动进行移动操作，这就减少了整体构造函数的调用次数。而一个命名变量的移动操作就需要std::move()。<br>总结<br>    1、使用引用和指针时要注意，尤其是将子线程detach后，如果主线程先结束，其内存空间会被收回，子线程中的指针就成了野指针；<br>    2、对于内置简单类型，建议传值；<br>    3、对于类对象，建议使用引用来接收，因为使用引用会只会构造两次，而传值会构造三次；<br>    4、在detach下要避免隐式转换，因为此时子线程可能还来不及转换主线程就结束了，应该在构造线程时，用参数构造一个临时对象传入。</p>
+<h2 id="12-线程进程协程区别"><a href="#12-线程进程协程区别" class="headerlink" title="12.线程进程协程区别"></a>12.线程进程协程区别</h2><h3 id="进程间通信（IPC）："><a href="#进程间通信（IPC）：" class="headerlink" title="进程间通信（IPC）："></a>进程间通信（IPC）：</h3><pre><code>管道(Pipe)、命名管道(FIFO)、消息队列(Message Queue) 、信号量(Semaphore) 、共享内存（Shared Memory）；套接字（Socket）。</code></pre><h3 id="进程线程联系"><a href="#进程线程联系" class="headerlink" title="进程线程联系:"></a>进程线程联系:</h3><p>调度：线程作为调度和分配的基本单位，进程作为拥有资源的基本单位；</p>
+<p>并发性：不仅进程之间可以并发执行，同一个进程的多个线程之间也可并发执行；</p>
+<p>拥有资源：进程是拥有资源的一个独立单位，线程不拥有系统资源，但可以访问隶属于进程的资源。进程所维护的是程序所包含的资源（静态资源）， 如：地址空间，打开的文件句柄集，文件系统状态，信号处理handler等；线程所维护的运行相关的资源（动态资源），如：运行栈，调度相关的控制信息，待处理的信号集等；</p>
+<p>系统开销：在创建或撤消进程时，由于系统都要为之分配和回收资源，导致系统的开销明显大于创建或撤消线程时的开销。但是进程有独立的地址空间，一个进程崩溃后，在保护模式下不会对其它进程产生影响，而线程只是一个进程中的不同执行路径。线程有自己的堆栈和局部变量，但线程之间没有单独的地址空间，一个进程死掉就等于所有的线程死掉，所以多进程的程序要比多线程的程序健壮，但在进程切换时，耗费资源较大，效率要差一些</p>
+<p>协程看上去也是子程序，但执行过程中，在子程序内部可中断，然后转而执行别的子程序，在适当的时候再返回来接着执行。</p>
+<p>协程，在执行过程中可中断去执行其他任务，执行完毕后再回来继续原先的操作——可以理解为两个或多个程序协同工作。</p>
+<p>协程特点在于单线程执行</p>
+<h2 id="13-为什么基类的析构函数一半为虚函数"><a href="#13-为什么基类的析构函数一半为虚函数" class="headerlink" title="13.为什么基类的析构函数一半为虚函数"></a>13.为什么基类的析构函数一半为虚函数</h2><p>防止内存泄漏</p>
+<h2 id="14-顺序存储和链式存储的优缺点"><a href="#14-顺序存储和链式存储的优缺点" class="headerlink" title="14.顺序存储和链式存储的优缺点"></a>14.顺序存储和链式存储的优缺点</h2><p>顺序存储:<br>    查找O(1),插入删除O(n) 空间利用率高，需要预先分配足够大的存储空间，估计过大，可能会导致顺序表后部大量闲置；预先分配过小，又会造成溢出。<br>链式存储<br>    查找O(n),插入删除O(1);使用灵活，存储密度低。</p>
+<h2 id="15-TCP，syn泛洪攻击"><a href="#15-TCP，syn泛洪攻击" class="headerlink" title="15.TCP，syn泛洪攻击"></a>15.TCP，syn泛洪攻击</h2><p>大量SYN链接请求攻击 cookies检查</p>
+<h2 id="16-值传递和引用传递的区别"><a href="#16-值传递和引用传递的区别" class="headerlink" title="16.值传递和引用传递的区别"></a>16.值传递和引用传递的区别</h2><p>值传递会拷贝一个对象，引用不会，值传递是俩个相互相互独立的值。</p>
+<h2 id="C-实现一个无上限的整数对象-并使用运算符重载实现加减法"><a href="#C-实现一个无上限的整数对象-并使用运算符重载实现加减法" class="headerlink" title="(C++)实现一个无上限的整数对象, 并使用运算符重载实现加减法"></a>(C++)实现一个无上限的整数对象, 并使用运算符重载实现加减法</h2><h2 id="回文链表-gt-链表反转"><a href="#回文链表-gt-链表反转" class="headerlink" title="回文链表 -&gt;链表反转"></a>回文链表 -&gt;链表反转</h2><h2 id="介绍下B树的实现原理"><a href="#介绍下B树的实现原理" class="headerlink" title="介绍下B树的实现原理"></a>介绍下B树的实现原理</h2>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%9D%A2%E7%BB%8F/" rel="tag"># 面经</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/16/%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/" rel="prev" title="单例模式">
+      <i class="fa fa-chevron-left"></i> 单例模式
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-vector迭代器失效分析"><span class="nav-number">1.</span> <span class="nav-text">1.vector迭代器失效分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#迭代器的几种失效的情况"><span class="nav-number">1.0.1.</span> <span class="nav-text">迭代器的几种失效的情况</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#vector扩容概述"><span class="nav-number">1.0.2.</span> <span class="nav-text">vector扩容概述</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#内存重新分配步骤"><span class="nav-number">1.0.2.1.</span> <span class="nav-text">内存重新分配步骤</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-函数指针和指针函数"><span class="nav-number">2.</span> <span class="nav-text">2.函数指针和指针函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-空指针野指针内存泄漏"><span class="nav-number">3.</span> <span class="nav-text">3.空指针野指针内存泄漏</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#空指针"><span class="nav-number">3.1.</span> <span class="nav-text">空指针</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#野指针"><span class="nav-number">3.2.</span> <span class="nav-text">野指针</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内存泄漏-是指在程序代码中动态申请的、堆上的内存-由于某种原因、在使用后没有被释放，进而造成内存的浪费。"><span class="nav-number">3.3.</span> <span class="nav-text">内存泄漏: 是指在程序代码中动态申请的、堆上的内存 由于某种原因、在使用后没有被释放，进而造成内存的浪费。</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-重载与覆盖的区别"><span class="nav-number">4.</span> <span class="nav-text">4.重载与覆盖的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-C-三大特性"><span class="nav-number">5.</span> <span class="nav-text">5.C++三大特性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-类内静态函数访问"><span class="nav-number">6.</span> <span class="nav-text">6.类内静态函数访问</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-二级指针"><span class="nav-number">7.</span> <span class="nav-text">7.二级指针</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-拷贝构造"><span class="nav-number">8.</span> <span class="nav-text">8.拷贝构造</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-深-浅拷贝"><span class="nav-number">9.</span> <span class="nav-text">9.深 浅拷贝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-产生哈希冲突解决方法"><span class="nav-number">10.</span> <span class="nav-text">10.产生哈希冲突解决方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-线程的参数有哪些"><span class="nav-number">11.</span> <span class="nav-text">11.线程的参数有哪些</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#12-线程进程协程区别"><span class="nav-number">12.</span> <span class="nav-text">12.线程进程协程区别</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#进程间通信（IPC）："><span class="nav-number">12.1.</span> <span class="nav-text">进程间通信（IPC）：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#进程线程联系"><span class="nav-number">12.2.</span> <span class="nav-text">进程线程联系:</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#13-为什么基类的析构函数一半为虚函数"><span class="nav-number">13.</span> <span class="nav-text">13.为什么基类的析构函数一半为虚函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#14-顺序存储和链式存储的优缺点"><span class="nav-number">14.</span> <span class="nav-text">14.顺序存储和链式存储的优缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#15-TCP，syn泛洪攻击"><span class="nav-number">15.</span> <span class="nav-text">15.TCP，syn泛洪攻击</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#16-值传递和引用传递的区别"><span class="nav-number">16.</span> <span class="nav-text">16.值传递和引用传递的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#C-实现一个无上限的整数对象-并使用运算符重载实现加减法"><span class="nav-number">17.</span> <span class="nav-text">(C++)实现一个无上限的整数对象, 并使用运算符重载实现加减法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#回文链表-gt-链表反转"><span class="nav-number">18.</span> <span class="nav-text">回文链表 -&gt;链表反转</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#介绍下B树的实现原理"><span class="nav-number">19.</span> <span class="nav-text">介绍下B树的实现原理</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="HuangFu.LZ."
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">HuangFu.LZ.</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:843858310@qq.com" title="E-Mail → mailto:843858310@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HuangFu.LZ.</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.7.0
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
