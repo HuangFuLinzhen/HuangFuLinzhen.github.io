@@ -169,6 +169,70 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/09/16/%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HuangFu.LZ.">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="千秋的个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/16/%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/" class="post-title-link" itemprop="url">工厂模式 Factory Method</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-16 21:37:00 / 修改时间：21:47:40" itemprop="dateCreated datePublished" datetime="2022-09-16T21:37:00+08:00">2022-09-16</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h1><p>通过“对象创建”模式绕开new，来避免对象创建(new)过程中所导致的紧耦合(依赖具体类)，从而支持对象创建的稳定。是接口抽象的第一步工作。(多态new)</p>
+<h5 id="典型模式"><a href="#典型模式" class="headerlink" title="典型模式"></a>典型模式</h5><p>·Factory Method<br>·Abstract Factory<br>·Prototype<br>·Builder</p>
+<p>Factory Method模式用于隔离类对象的使用者和具体类型之间的 耦合关系。面对一个经常变化的具体类型，紧耦合关系(new)会导 致软件的脆弱。</p>
+<p>Factory Method模式通过面向对象的手法，将所要创建的具体对 象工作延迟到子类，从而实现一种扩展（而非更改）的策略，较好 地解决了这种紧耦合关系。</p>
+<h3 id="代码实现参考"><a href="#代码实现参考" class="headerlink" title="代码实现参考"></a>代码实现参考</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line">//抽象类</span><br><span class="line">class ISplitter&#123;</span><br><span class="line">public:</span><br><span class="line">    virtual void split()=0;</span><br><span class="line">    virtual ~<span class="function"><span class="title">ISplitter</span></span>()&#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">//工厂基类</span><br><span class="line">class SplitterFactory&#123;</span><br><span class="line">public:</span><br><span class="line">    virtual ISplitter* CreateSplitter()=0;</span><br><span class="line">    virtual ~<span class="function"><span class="title">SplitterFactory</span></span>()&#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">//具体类</span><br><span class="line">class BinarySplitter : public ISplitter&#123;</span><br><span class="line">    //....</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class TxtSplitter: public ISplitter&#123;</span><br><span class="line">     //....</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class PictureSplitter: public ISplitter&#123;</span><br><span class="line">     //....</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class VideoSplitter: public ISplitter&#123;</span><br><span class="line">     //....</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">//具体工厂</span><br><span class="line">class BinarySplitterFactory: public SplitterFactory&#123;</span><br><span class="line">public:</span><br><span class="line">    virtual ISplitter* <span class="function"><span class="title">CreateSplitter</span></span>()&#123;</span><br><span class="line">        <span class="built_in">return</span> new BinarySplitter();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class TxtSplitterFactory: public SplitterFactory&#123;</span><br><span class="line">public:</span><br><span class="line">    virtual ISplitter* <span class="function"><span class="title">CreateSplitter</span></span>()&#123;</span><br><span class="line">        <span class="built_in">return</span> new TxtSplitter();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class PictureSplitterFactory: public SplitterFactory&#123;</span><br><span class="line">public:</span><br><span class="line">    virtual ISplitter* <span class="function"><span class="title">CreateSplitter</span></span>()&#123;</span><br><span class="line">        <span class="built_in">return</span> new PictureSplitter();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class VideoSplitterFactory: public SplitterFactory&#123;</span><br><span class="line">public:</span><br><span class="line">    virtual ISplitter* <span class="function"><span class="title">CreateSplitter</span></span>()&#123;</span><br><span class="line">        <span class="built_in">return</span> new VideoSplitter();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class MainForm : public Form</span><br><span class="line">&#123;</span><br><span class="line">    SplitterFactory*  factory;//工厂</span><br><span class="line"></span><br><span class="line">public:</span><br><span class="line">    </span><br><span class="line">    MainForm(SplitterFactory*  factory)&#123;</span><br><span class="line">        this-&gt;factory=factory;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">	void <span class="function"><span class="title">Button1_Click</span></span>()&#123;</span><br><span class="line"></span><br><span class="line">		ISplitter * splitter=</span><br><span class="line">            factory-&gt;CreateSplitter(); //多态new</span><br><span class="line">        </span><br><span class="line">        splitter-&gt;split();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/09/16/%E5%A4%9A%E7%9B%8A%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -722,7 +786,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
