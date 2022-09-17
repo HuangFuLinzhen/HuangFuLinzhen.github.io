@@ -169,6 +169,92 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/09/17/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HuangFu.LZ.">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="千秋的个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/17/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/" class="post-title-link" itemprop="url">智能指针</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-17 16:37:00 / 修改时间：16:49:22" itemprop="dateCreated datePublished" datetime="2022-09-17T16:37:00+08:00">2022-09-17</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="独占指针-unique-ptr"><a href="#独占指针-unique-ptr" class="headerlink" title="独占指针   unique_ptr"></a>独占指针   unique_ptr</h1><p>在任何给定时刻，只能有一个指针管理内存<br>当指针超出作用域时，自动释放内存<br>该类型不可COPY，只能MOVE<br>头文件<memory></p>
+<h4 id="三种创建方式："><a href="#三种创建方式：" class="headerlink" title="三种创建方式："></a>三种创建方式：</h4><p>通过已有的裸指针(不推荐)</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Cat* cat = new Cat();</span><br><span class="line">unique_ptr&lt;Cat&gt; U_cat&#123; cat &#125;;</span><br><span class="line">cat = nullptr;</span><br><span class="line">delete cat;</span><br></pre></td></tr></table></figure>
+<p>通过new创建</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">unique_ptr&lt;Cat&gt; U_cat2&#123; new Cat() &#125;;</span><br></pre></td></tr></table></figure>
+<p>通过std::make_unique创建(推荐)</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">unique_ptr&lt;Cat&gt; U_cat3 = make_unique&lt;Cat&gt;(<span class="string">"maomao"</span>);</span><br></pre></td></tr></table></figure>
+
+<p>unique_ptr可以通过get()获取地址<br>        U_cat3.get();<br>unique_ptr实现了-&gt;和*<br>        -&gt;调用成员函数<br>        调用dereferencing</p>
+<p>在做函数参数或是返回值中一定要注意所有权</p>
+<h4 id="Passing-by-value"><a href="#Passing-by-value" class="headerlink" title="Passing by value"></a>Passing by value</h4><p>需要用std::move转移内存拥有权</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">func(move(U_cat));</span><br><span class="line">U_cat-&gt;SetCatName(<span class="string">"iim"</span>);//报错</span><br></pre></td></tr></table></figure>
+<p>如果有参数直接传入std::make_unique语句 自动转换为move<br>        func(make_unique<Cat>(“m”));//隐式调用move;</p>
+<h4 id="Passing-by-reference-推荐"><a href="#Passing-by-reference-推荐" class="headerlink" title="Passing by reference(推荐)"></a>Passing by reference(推荐)</h4><p>如果设置参数为const则不能改变指向  //reset();reset为智能指针清空方法 清空后地址为0<br>        func(U_cat);</p>
+<h4 id="Return-by-value"><a href="#Return-by-value" class="headerlink" title="Return by value"></a>Return by value</h4><p>指向一个local object<br>可以作为链式函数</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">unique_ptr&lt;Cat&gt; get_unique(string s) &#123;</span><br><span class="line">    	unique_ptr&lt;Cat&gt; c = make_unique&lt;Cat&gt;(s);</span><br><span class="line">    	<span class="built_in">return</span> c;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">get_unique(<span class="string">"s"</span>)-&gt;Cat_Info();</span><br></pre></td></tr></table></figure>
+
+
+<h1 id="计数指针-shared-ptr"><a href="#计数指针-shared-ptr" class="headerlink" title="计数指针 shared_ptr"></a>计数指针 shared_ptr</h1><p>又称共享指针<br>与unique不同的是它可以共享数据</p>
+<p>shared_ptr创建了一个计数器与类对象所指的内存关联<br>copy则计数器加一，销毁则计数器减一<br>api为use_count()</p>
+<h4 id="passed-by-value"><a href="#passed-by-value" class="headerlink" title="passed by value"></a>passed by value</h4><pre><code>copy
+计数器加一</code></pre><h4 id="passed-by-ref"><a href="#passed-by-ref" class="headerlink" title="passed by ref"></a>passed by ref</h4><pre><code>不可改变指向</code></pre><h4 id="return-by-value"><a href="#return-by-value" class="headerlink" title="return by value"></a>return by value</h4><pre><code>链式调用</code></pre><p>不能将shared_ptr转换为unique_ptr<br>unique_ptr可以转换为shared_ptr 通过std::move</p>
+<p>函数返回unique_ptr是常见的设计模式，可以提高代码的复用率,可以随时转换为shared_ptr<br>    unique_ptr返回值类型的函数可以直接用shared_ptr接收返回值</p>
+<h1 id="weak-ptr-弱引用"><a href="#weak-ptr-弱引用" class="headerlink" title="weak_ptr 弱引用"></a>weak_ptr 弱引用</h1><p>weak_ptr不拥有所有权<br>不能调用-&gt;和*<br>weak_ptr不可以单独存在</p>
+<pre><code class="hash">shared_ptr&lt;Cat&gt; scp = make_shared&lt;Cat&gt;();
+weak_ptr&lt;Cat&gt; wcp(scp);
+wcp.use_count();//可以调用计数器，但计数器不会+1</code></pre>
+<h4 id="存在意义："><a href="#存在意义：" class="headerlink" title="存在意义："></a>存在意义：</h4><p>A类中有一个需求存储其他A类，如果使用Share_ptr，在销毁时会存在循环依赖问题，<br>所以在这里需要一个不需要拥有所有权的指针来标记该同类对象<br>weak_ptr通过lock()函数来提升为shared_ptr(类型转换)<br>    shared_ptr<Cat> scp2 = wcp.lock();</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/09/17/%E9%9D%9E%E9%80%92%E5%BD%92%E9%81%8D%E5%8E%86%E4%BA%8C%E5%8F%89%E6%A0%91/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -780,81 +866,6 @@
   
   
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/19/HDU1052%E7%94%B0%E5%BF%8C%E8%B5%9B%E9%A9%AC%E8%A7%A3%E9%A2%98%E6%8A%A5%E5%91%8A/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="HuangFu.LZ.">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="千秋的个人博客">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/01/19/HDU1052%E7%94%B0%E5%BF%8C%E8%B5%9B%E9%A9%AC%E8%A7%A3%E9%A2%98%E6%8A%A5%E5%91%8A/" class="post-title-link" itemprop="url">HDU1052田忌赛马解题报告</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-01-19 20:53:22" itemprop="dateCreated datePublished" datetime="2020-01-19T20:53:22+08:00">2020-01-19</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-01-27 14:42:17" itemprop="dateModified" datetime="2020-01-27T14:42:17+08:00">2020-01-27</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>原题链接：<a href="http://acm.hdu.edu.cn/showproblem.php?pid=1052" target="_blank" rel="noopener">HDU1052  Tian Ji – The Horse Racing</a></p>
-<h2 id="【原题】"><a href="#【原题】" class="headerlink" title="【原题】"></a>【原题】</h2><h3 id="Problem-Description"><a href="#Problem-Description" class="headerlink" title="Problem Description"></a>Problem Description</h3><p>Here is a famous story in Chinese history.</p>
-<p>“That was about 2300 years ago. General Tian Ji was a high official in the country Qi. He likes to play horse racing with the king and others.”</p>
-<p>“Both of Tian and the king have three horses in different classes, namely, regular, plus, and super. The rule is to have three rounds in a match; each of the horses must be used in one round.
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/01/19/HDU1052%E7%94%B0%E5%BF%8C%E8%B5%9B%E9%A9%AC%E8%A7%A3%E9%A2%98%E6%8A%A5%E5%91%8A/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
   </div>
 
   
@@ -927,14 +938,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-count">13</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
