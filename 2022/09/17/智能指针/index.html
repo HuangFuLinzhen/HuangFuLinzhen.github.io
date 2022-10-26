@@ -53,9 +53,9 @@
 <meta property="og:site_name" content="千秋的个人博客">
 <meta property="og:description" content="独占指针   unique_ptr在任何给定时刻，只能有一个指针管理内存当指针超出作用域时，自动释放内存该类型不可COPY，只能MOVE头文件&lt;memory&gt;">
 <meta property="article:published_time" content="2022-09-17T08:37:00.000Z">
-<meta property="article:modified_time" content="2022-09-17T08:56:40.992Z">
+<meta property="article:modified_time" content="2022-10-26T08:41:03.170Z">
 <meta property="article:author" content="HuangFu.LZ.">
-<meta property="article:tag" content="c++11">
+<meta property="article:tag" content="C++11">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="http://yoursite.com/2022/09/17/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/">
@@ -196,10 +196,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-09-17 16:37:00 / 修改时间：16:56:40" itemprop="dateCreated datePublished" datetime="2022-09-17T16:37:00+08:00">2022-09-17</time>
+              <time title="创建时间：2022-09-17 16:37:00" itemprop="dateCreated datePublished" datetime="2022-09-17T16:37:00+08:00">2022-09-17</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-10-26 16:41:03" itemprop="dateModified" datetime="2022-10-26T16:41:03+08:00">2022-10-26</time>
+              </span>
 
           
             <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
@@ -222,20 +228,20 @@
         <h1 id="独占指针-unique-ptr"><a href="#独占指针-unique-ptr" class="headerlink" title="独占指针   unique_ptr"></a>独占指针   unique_ptr</h1><p>在任何给定时刻，只能有一个指针管理内存<br>当指针超出作用域时，自动释放内存<br>该类型不可COPY，只能MOVE<br>头文件&lt;memory&gt;</p>
 <a id="more"></a>
 <h4 id="三种创建方式："><a href="#三种创建方式：" class="headerlink" title="三种创建方式："></a>三种创建方式：</h4><p>通过已有的裸指针(不推荐)</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Cat* cat = new Cat();</span><br><span class="line">unique_ptr&lt;Cat&gt; U_cat&#123; cat &#125;;</span><br><span class="line">cat = nullptr;</span><br><span class="line">delete cat;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Cat* cat = <span class="keyword">new</span> Cat();</span><br><span class="line"><span class="built_in">unique_ptr</span>&lt;Cat&gt; U_cat&#123; cat &#125;;</span><br><span class="line">cat = <span class="literal">nullptr</span>;</span><br><span class="line"><span class="keyword">delete</span> cat;</span><br></pre></td></tr></table></figure>
 <p>通过new创建</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">unique_ptr&lt;Cat&gt; U_cat2&#123; new Cat() &#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">unique_ptr</span>&lt;Cat&gt; U_cat2&#123; <span class="keyword">new</span> Cat() &#125;;</span><br></pre></td></tr></table></figure>
 <p>通过std::make_unique创建(推荐)</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">unique_ptr&lt;Cat&gt; U_cat3 = make_unique&lt;Cat&gt;(<span class="string">"maomao"</span>);</span><br></pre></td></tr></table></figure>
 
 <p>unique_ptr可以通过get()获取地址<br>        U_cat3.get();<br>unique_ptr实现了-&gt;和*<br>        -&gt;调用成员函数<br>        调用dereferencing</p>
 <p>在做函数参数或是返回值中一定要注意所有权</p>
 <h4 id="Passing-by-value"><a href="#Passing-by-value" class="headerlink" title="Passing by value"></a>Passing by value</h4><p>需要用std::move转移内存拥有权</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">func(move(U_cat));</span><br><span class="line">U_cat-&gt;SetCatName(<span class="string">"iim"</span>);//报错</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">func(<span class="built_in">move</span>(U_cat));</span><br><span class="line">U_cat-&gt;SetCatName(<span class="string">"iim"</span>);<span class="comment">//报错</span></span><br></pre></td></tr></table></figure>
 <p>如果有参数直接传入std::make_unique语句 自动转换为move<br>        func(make_unique<Cat>(“m”));//隐式调用move;</p>
 <h4 id="Passing-by-reference-推荐"><a href="#Passing-by-reference-推荐" class="headerlink" title="Passing by reference(推荐)"></a>Passing by reference(推荐)</h4><p>如果设置参数为const则不能改变指向  //reset();reset为智能指针清空方法 清空后地址为0<br>        func(U_cat);</p>
 <h4 id="Return-by-value"><a href="#Return-by-value" class="headerlink" title="Return by value"></a>Return by value</h4><p>指向一个local object<br>可以作为链式函数</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">unique_ptr&lt;Cat&gt; get_unique(string s) &#123;</span><br><span class="line">    	unique_ptr&lt;Cat&gt; c = make_unique&lt;Cat&gt;(s);</span><br><span class="line">    	<span class="built_in">return</span> c;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">get_unique(<span class="string">"s"</span>)-&gt;Cat_Info();</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">unique_ptr</span>&lt;Cat&gt; get_unique(<span class="built_in">string</span> s) &#123;</span><br><span class="line">    	<span class="built_in">unique_ptr</span>&lt;Cat&gt; c = make_unique&lt;Cat&gt;(s);</span><br><span class="line">    	<span class="keyword">return</span> c;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">get_unique(<span class="string">"s"</span>)-&gt;Cat_Info();</span><br></pre></td></tr></table></figure>
 
 
 <h1 id="计数指针-shared-ptr"><a href="#计数指针-shared-ptr" class="headerlink" title="计数指针 shared_ptr"></a>计数指针 shared_ptr</h1><p>又称共享指针<br>与unique不同的是它可以共享数据</p>
@@ -257,7 +263,7 @@ wcp.use_count();//可以调用计数器，但计数器不会+1</code></pre>
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/c-11/" rel="tag"># c++11</a>
+              <a href="/tags/C-11/" rel="tag"># C++11</a>
           </div>
 
         
@@ -348,14 +354,14 @@ wcp.use_count();//可以调用计数器，但计数器不会+1</code></pre>
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-count">23</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

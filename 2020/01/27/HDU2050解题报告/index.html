@@ -54,7 +54,7 @@
 <meta property="og:description" content="原题链接：折线分割平面 【原题】Problem Description我们看到过很多直线分割平面的题目，今天的这个题目稍微有些变化，我们要求的是n条折线分割平面的最大数目。比如，一条折线可以将平面分成两部分，两条折线最多可以将平面分成7部分，具体如下所示。">
 <meta property="og:image" content="http://yoursite.com/img/%E6%8A%98%E7%BA%BF%E5%88%86%E5%89%B2%E5%B9%B3%E9%9D%A2.jpg">
 <meta property="article:published_time" content="2020-01-27T05:55:13.000Z">
-<meta property="article:modified_time" content="2020-01-27T06:40:31.424Z">
+<meta property="article:modified_time" content="2022-10-26T08:38:30.475Z">
 <meta property="article:author" content="HuangFu.LZ.">
 <meta property="article:tag" content="HDU">
 <meta name="twitter:card" content="summary">
@@ -198,10 +198,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2020-01-27 13:55:13 / 修改时间：14:40:31" itemprop="dateCreated datePublished" datetime="2020-01-27T13:55:13+08:00">2020-01-27</time>
+              <time title="创建时间：2020-01-27 13:55:13" itemprop="dateCreated datePublished" datetime="2020-01-27T13:55:13+08:00">2020-01-27</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-10-26 16:38:30" itemprop="dateModified" datetime="2022-10-26T16:38:30+08:00">2022-10-26</time>
+              </span>
 
           
             <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
@@ -231,7 +237,7 @@
 
 <hr>
 <h2 id="【问题分析】"><a href="#【问题分析】" class="headerlink" title="【问题分析】"></a>【问题分析】</h2><pre><code>其实这就是简单的数学问题</code></pre><p>要使产生的平面个数最多就要使折线产生的交点最多。当增加第n条折线时，最多与之前的（n-1）条折线产生2*2*（n-1）个交点。从而多出平面2*2*（n-1）+1个。<br>所以得到函数f(n)=f(n-1)+4*(n-1)+1。</p>
-<h2 id="【ac代码】"><a href="#【ac代码】" class="headerlink" title="【ac代码】"></a>【ac代码】</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#include &lt;stdio.h&gt;</span></span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    int n,i,k,j;</span><br><span class="line">    int a[10010];</span><br><span class="line">    scanf(<span class="string">"%d"</span>,&amp;n);</span><br><span class="line">    <span class="keyword">while</span>(n--)</span><br><span class="line">    &#123;</span><br><span class="line">        scanf(<span class="string">"%d"</span>,&amp;k);</span><br><span class="line">        a[1]=2;</span><br><span class="line">        <span class="keyword">for</span>(j=2;j&lt;=k;j++)</span><br><span class="line">            a[j]=a[j-1]+4*(j-1)+1;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%d\n"</span>,a[k]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">return</span> 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="【ac代码】"><a href="#【ac代码】" class="headerlink" title="【ac代码】"></a>【ac代码】</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n,i,k,j;</span><br><span class="line">    <span class="keyword">int</span> a[<span class="number">10010</span>];</span><br><span class="line">    <span class="built_in">scanf</span>(<span class="string">"%d"</span>,&amp;n);</span><br><span class="line">    <span class="keyword">while</span>(n--)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">scanf</span>(<span class="string">"%d"</span>,&amp;k);</span><br><span class="line">        a[<span class="number">1</span>]=<span class="number">2</span>;</span><br><span class="line">        <span class="keyword">for</span>(j=<span class="number">2</span>;j&lt;=k;j++)</span><br><span class="line">            a[j]=a[j<span class="number">-1</span>]+<span class="number">4</span>*(j<span class="number">-1</span>)+<span class="number">1</span>;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%d\n"</span>,a[k]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
     </div>
 
     
@@ -331,14 +337,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-count">23</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
